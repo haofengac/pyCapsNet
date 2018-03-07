@@ -35,7 +35,6 @@ save_epoch = 1
 val_epoch = 1
 project_id = 'capsnet'
 num_classes = 10
-reconst_factor = 0.0005
 save_dir = 'saved_models'
 num_epochs = 100
 

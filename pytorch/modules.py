@@ -92,16 +92,16 @@ class CapsNet(nn.Module):
         x = self.digit_caps(x)
         reconst = self.decoder(x)
         return x, reconst
-        
+
 class CapsLoss(nn.Module):
     def __init__(self):
         super(CapsLoss, self).__init__()
         self.mse_loss = nn.MSELoss()
-        
+        self.reconst_factor = 0.0005
     def forward(self, scores, labels, reconst, inpt):
         norms = torch.sqrt(scores).squeeze()
         margin_loss = labels * ( F.relu(0.9 - norms, inplace=True) )**2 + 0.5*(1-labels) * ( F.relu(norms - 0.1, inplace=True) )**2
         margin_loss = margin_loss.sum(dim=-1).mean()
         reconst_loss = self.mse_loss(reconst.view(reconst.size(0),-1), inpt.view(inpt.size(0),-1))
-        return margin_loss + reconst_factor * reconst_loss
+        return margin_loss + self.reconst_factor * reconst_loss
 
