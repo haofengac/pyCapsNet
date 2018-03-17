@@ -3,7 +3,8 @@
 
 import numpy as np
 import time, os
-
+import multiprocessing as mp
+from functools import partial
 
 def tile(arr, copy, axis):
     return np.concatenate([arr] * copy, axis=axis)
@@ -140,6 +141,10 @@ class Conv2d(Module):
         W, b = params
         self.W = W
         self.b = b
+    
+    def _set_input(self, x):
+        self.x_shape = x.shape
+        self.X_col = self.im2col_indices(x)
         
     def forward(self, X):
         NF, CF, HF, WF = self.W.shape
@@ -220,7 +225,7 @@ class Conv2d(Module):
         k, i, j = self.get_im2col_indices()
         cols_reshaped = cols.reshape(C * field_height * field_width, -1, N)
         cols_reshaped = cols_reshaped.transpose(2, 0, 1)
-        np.scatter_add(x_padded, (slice(None), k, i, j), cols_reshaped)
+        np.add.at(x_padded, (slice(None), k, i, j), cols_reshaped)
         if padding == 0:
             return x_padded
         return x_padded[:, :, padding:-padding, padding:-padding]
@@ -298,26 +303,43 @@ range(ndim)]
         self.mapsize = mapsize
         self.ncaps = out_channels * mapsize**2
         self.squash = Squash()
-        self.x_size = None
+        self.x = None
     
     def _set_params(self, params):
         for i, c in enumerate(self.caps):
             c._set_params(params[i])
     
+    def cap_forward(self, i, x):
+        out = self.caps[i](x).reshape((x.shape[0], -1, 1))
+        return out
+    
+    def cap_backward(self, i, grads, x, optimizer):
+        self.caps[i]._set_input(x)
+        out = np.expand_dims(self.caps[i].backward(
+            grads[:,:,:,:,i], optimizer=optimizer), -1)
+        return out
+    
     def forward(self, x):
         t = time.time()
         # output (bs, ncaps, ndim)
         self.x_size = x.shape
-        u = np.concatenate([cap(x).reshape((x.shape[0], -1, 1)) for cap in self.caps], axis=-1)
+        self.x = x
+        with mp.Pool() as pool:
+            u = pool.map(partial(self.cap_forward, x=x), np.arange(len(self.caps)))
+        u = np.concatenate(u, axis=-1)
+
         return self.squash(u)
     
     def backward(self, grads, optimizer=None):
         t = time.time()
         grads = self.squash.backward(grads)
         grads = grads.reshape((self.x_size[0],self.out_channels, self.mapsize, self.mapsize,-1))
-        grads = np.concatenate([np.expand_dims(self.caps[i].backward(
-            grads[:,:,:,:,i], optimizer=optimizer), -1) for i in range(self.ndim)], axis=-1)
+        
+        with mp.Pool() as pool:
+            grads = pool.map(partial(self.cap_backward, grads=grads, x=self.x, optimizer=optimizer), np.arange(len(self.caps)))
+        grads = np.concatenate(grads, axis=-1)
         out = np.sum(grads, axis=-1)
+        
         return out
      
         

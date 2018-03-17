@@ -4,6 +4,7 @@ import cupy as cp
 from mnist import MNIST
 from modules import CapsNet, CapsLoss
 from optim import AdamOptimizer
+
     
 def parse_args():
     """
@@ -70,7 +71,7 @@ if __name__ == '__main__':
             if batch_idx % args.disp_interval == 0:
                 end = time.time()
                 print("[epoch %2d][iter %4d] loss: %.4f, acc: %.4f%% (%d/%d)" \
-                                % (epoch, batch_idx, loss, 100.*correct/bs, correct, bs))
+                                % (epoch, batch_idx, loss, 100.*correct/args.bs, correct, args.bs))
 
         # val
         if epoch % val_epoch == 0:
@@ -79,7 +80,7 @@ if __name__ == '__main__':
             total = 0
 
             for batch_idx, (imgs, targets) in enumerate(mnist.eval_dataset):
-                if imgs.shape[0] != bs:
+                if imgs.shape[0] != args.bs:
                     continue
 
                 targets = eye[targets]
