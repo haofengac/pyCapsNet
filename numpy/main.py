@@ -1,6 +1,6 @@
 from modules import *
 import time, os, argparse
-import cupy as cp
+import numpy as np
 from mnist import MNIST
 from modules import CapsNet, CapsLoss
 from optim import AdamOptimizer
@@ -22,6 +22,12 @@ def parse_args():
     parser.add_argument('--disp', dest='disp_interval',
                       help='interval to display training loss',
                       default='10', type=int)
+    parser.add_argument('--num_epochs', dest='num_epochs',
+                      help='interval to display training loss',
+                      default='100', type=int)
+    
+    args = parser.parse_args()
+    
     return args
 
 if __name__ == '__main__':
@@ -29,7 +35,7 @@ if __name__ == '__main__':
     args = parse_args()
     
     mnist = MNIST(bs=args.bs, shuffle=True)
-    eye = cp.eye(mnist.num_classes)
+    eye = np.eye(mnist.num_classes)
     model = CapsNet()
 
     criterion = CapsLoss()
@@ -38,14 +44,14 @@ if __name__ == '__main__':
         
     print('Training started!')
 
-    for epoch in range(num_epochs):
+    for epoch in range(args.num_epochs):
         start = time.time()
 
         # train
         correct = 0
         for batch_idx, (imgs, targets) in enumerate(mnist.train_dataset):
             optimizer.step()
-            if imgs.shape[0] != bs:
+            if imgs.shape[0] != args.bs:
                 continue
 
             targets = eye[targets]
@@ -53,12 +59,12 @@ if __name__ == '__main__':
             loss, grad = criterion(scores, targets, reconst, imgs)
             model.backward(grad, optimizer)
 
-            classes = cp.argmax(scores, axis=1)
-            predicted = eye[cp.squeeze(classes), :]
+            classes = np.argmax(scores, axis=1)
+            predicted = eye[np.squeeze(classes), :]
 
-            predicted_idx = cp.argmax(predicted, 1)
-            label_idx = cp.argmax(targets, 1)
-            correct = cp.sum(predicted_idx == label_idx)
+            predicted_idx = np.argmax(predicted, 1)
+            label_idx = np.argmax(targets, 1)
+            correct = np.sum(predicted_idx == label_idx)
 
             # info
             if batch_idx % args.disp_interval == 0:
@@ -81,12 +87,12 @@ if __name__ == '__main__':
                 loss, grad = criterion(scores, targets, reconst, imgs)
                 model.backward(grad, optimizer)
 
-                classes = cp.argmax(scores, axis=1)
-                predicted = eye[cp.squeeze(classes, axis=1), :]
+                classes = np.argmax(scores, axis=1)
+                predicted = eye[np.squeeze(classes, axis=1), :]
 
-                predicted_idx = cp.argmax(predicted, 1)
-                label_idx = cp.argmax(targets, 1)
-                correct += cp.sum(predicted_idx == label_idx)
+                predicted_idx = np.argmax(predicted, 1)
+                label_idx = np.argmax(targets, 1)
+                correct += np.sum(predicted_idx == label_idx)
                 total += targets.shape[0]
 
             print("[epoch %2d] val acc: %.4f%% (%d/%d)" \

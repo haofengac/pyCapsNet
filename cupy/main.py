@@ -1,41 +1,60 @@
 from modules import *
-import time, os
+import time, os, argparse
 import cupy as cp
 from mnist import MNIST
 from modules import CapsNet, CapsLoss
 from optim import AdamOptimizer
-            
-bs = 100
-lr = 1e-2
-use_cuda = True
-opt = 'adam'
-num_epochs = 100
-disp_interval = 10
-num_classes = 10
     
-if __name__ == '__main__':
+def parse_args():
+    """
+    Parse input arguments
+    """
+    parser = argparse.ArgumentParser(description='Cupy Capsnet')
+    parser.add_argument('--bs', dest='bs',
+                      help='batch size',
+                      default='100', type=int)
+    parser.add_argument('--lr', dest='lr',
+                      help='learning rate',
+                      default=1e-2, type=float)
+    parser.add_argument('--opt', dest='opt',
+                      help='optimizer',
+                      default='adam', type=str)
+    parser.add_argument('--disp', dest='disp_interval',
+                      help='interval to display training loss',
+                      default='10', type=int)
+    parser.add_argument('--num_epochs', dest='num_epochs',
+                      help='interval to display training loss',
+                      default='100', type=int)
+    
+    args = parser.parse_args()
+    
+    return args
 
-    mnist = MNIST(bs=bs, shuffle=True)
-    eye = cp.eye(num_classes)
+if __name__ == '__main__':
+    
+    args = parse_args()
+    
+    mnist = MNIST(bs=args.bs, shuffle=True)
+    eye = cp.eye(mnist.num_classes)
     model = CapsNet()
 
     criterion = CapsLoss()
-    if opt == 'adam':
-        optimizer = AdamOptimizer(lr=lr)
+    if args.opt == 'adam':
+        optimizer = AdamOptimizer(lr=args.lr)
         
     print('Training started!')
 
-    for epoch in range(num_epochs):
+    for epoch in range(args.num_epochs):
         start = time.time()
 
         # train
         correct = 0
         for batch_idx, (imgs, targets) in enumerate(mnist.train_dataset):
             optimizer.step()
-            if imgs.shape[0] != bs:
+            if imgs.shape[0] != args.bs:
                 continue
 
-            targets = cp.eye(num_classes)[targets]
+            targets = eye[targets]
             scores, reconst = model(imgs)
             loss, grad = criterion(scores, targets, reconst, imgs)
             model.backward(grad, optimizer)
@@ -48,7 +67,7 @@ if __name__ == '__main__':
             correct = cp.sum(predicted_idx == label_idx)
 
             # info
-            if batch_idx % disp_interval == 0:
+            if batch_idx % args.disp_interval == 0:
                 end = time.time()
                 print("[epoch %2d][iter %4d] loss: %.4f, acc: %.4f%% (%d/%d)" \
                                 % (epoch, batch_idx, loss, 100.*correct/bs, correct, bs))
@@ -63,7 +82,7 @@ if __name__ == '__main__':
                 if imgs.shape[0] != bs:
                     continue
 
-                targets = cp.eye(num_classes)[targets]
+                targets = eye[targets]
                 scores, reconst = model(imgs)
                 loss, grad = criterion(scores, targets, reconst, imgs)
                 model.backward(grad, optimizer)

@@ -1,6 +1,5 @@
 import time, os
 import numpy as np
-import cupy as cp
 from urllib import request
 import gzip
 import pickle
@@ -61,7 +60,7 @@ class MNIST:
             mnist['training_images'] = mnist['training_images'].reshape((-1,1,28,28))
             mnist['training_images'] = list(self.chunks(mnist['training_images'][idxs]))
             mnist['training_labels'] = list(self.chunks(mnist['training_labels'][idxs]))
-            self.train_dataset = zip(cp.array(mnist['training_images']), cp.array(mnist['training_labels']))
+            self.train_dataset = zip(mnist['training_images'], mnist['training_labels'])
             
             n = mnist['test_images'].shape[0]
             idxs = np.arange(n)
@@ -69,6 +68,6 @@ class MNIST:
             mnist['test_images'] = mnist['test_images'].reshape((-1,1,28,28))
             mnist['test_images'] = list(self.chunks(mnist['test_images'][idxs]))
             mnist['test_labels'] = list(self.chunks(mnist['test_labels'][idxs]))
-            self.eval_dataset = zip(cp.array(mnist['test_images']), cp.array(mnist['test_labels']))
+            self.eval_dataset = zip(mnist['test_images'], mnist['test_labels'])
 
             
