@@ -1,2 +1,2 @@
-# cupyCapsNet: A Cupy Implementation of Capsule Networks
+# pyCapsNet: Python Implementations of Capsule Networks
 Under construction
