@@ -1,2 +1,2 @@
-# CupyCapsNet: A Cupy Implementation of Capsule Networks
+# cupyCapsNet: A Cupy Implementation of Capsule Networks
 Under construction
