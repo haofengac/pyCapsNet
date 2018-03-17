@@ -16,6 +16,7 @@ class MNIST:
         ]
         self.mean = 0.1307
         self.std = 0.3081
+        self.num_classes = 10
         self.bs = bs
         self.path = path
         if not os.path.exists(self.path):
