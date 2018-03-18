@@ -49,7 +49,7 @@ In this paper, the authors replaces the conventional max-pooling layer with dyna
 ### The Architecture
 <p align="center"><img src='https://github.com/xanderchf/pyCapsNet/blob/master/capsnet.png' width=700></dp>
 
-The Capsule Network in the figure above consists of three parts: a convolutional layer (Conv1) and two capsule layers (PrimaryCaps and DigitCaps, which I will explain later). The DigitCaps layer yields a 16-dimensional vector for each of the 10 classes, and the L2 norm of these vectors becomes the class score. The decoder in the figure below consumes these vectors and tries to reconstruct the image. The final loss is the combination of the score loss ("margin loss" in the paper) and the reconstruction loss.
+The Capsule Network in the figure above consists of three parts: a convolutional layer (Conv1) and two capsule layers (PrimaryCaps and DigitCaps). The DigitCaps layer yields a 16-dimensional vector for each of the 10 classes, and the L2 norm of these vectors becomes the class score. The decoder in the figure below consumes these vectors and tries to reconstruct the image. The final loss is the combination of the score loss ("margin loss" in the paper) and the reconstruction loss.
 
 <p align="center"><img src="https://github.com/xanderchf/pyCapsNet/blob/master/decoder.png" width=500></p>
 
