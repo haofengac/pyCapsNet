@@ -55,6 +55,8 @@ The Capsule Network in the figure above consists of three parts: a convolutional
 
 ### Detailed Walkthrough
 
+Here I'll provide a brief cheat sheet, which I would find extremely helpful if I saw this before implementation.
+
 * Conv1:
   * Input size `(N, C=1, H=28, W=28)`
   * `in_channel=1, out_channel=256, kernel_size=(9,9), stride=1, padding=0`
