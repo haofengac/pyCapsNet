@@ -98,7 +98,6 @@ I also performed the experiment to perturb the 16-dimensional vectors of DigitCa
 
 - [x] Add visualization ipynb for PyTorch implementation
 - [ ] Add visualization ipynb for CuPy and NumPy implementations
-- [ ] Report performance of CuPy implementation
 - [ ] Finish deformable convolution implementation in CuPy
 - [ ] Start a project on CuPy automatic differentiation, which could possibly benefit this project
 
