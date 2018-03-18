@@ -24,6 +24,17 @@ The purpose of this project is not to shoot for better performance or optimizing
 
 This [video] really helped a lot for me to understand CapsNet. Take a minute and check it out.
 
+## To Run
+For NumPy and CuPy implementations, change into the corresponding directories, and run
+```
+python3 main.py --bs=100, --lr=1e-2, --opt='adam', '--disp'=1, --num_epochs=100, --val_epoch=1
+```
+For the PyTorch implementation, run
+```
+python3 main.py --bs=100, --lr=1e-2, --opt='adam', '--disp'=1, --num_epochs=100, --val_epoch=1, use_cuda=True
+```
+To visualize the reconstructed data, run the jupyter notebook in PyTorch/Visualization.ipnb.
+
 ## Capsule Networks: Key Points
 A capsule is a neuron that outputs activity vectors to represent the instantiation parameters of certain entities. The magnitude of the activation vector corresponds to the probability that such entity exists, and the orientation represents the instantiation parameters. The [paper] proposes a multi-layer capsule network for different image classification tasks, and achieved state-of-the-art performance on the MNIST dataset.
 
@@ -65,11 +76,11 @@ The Capsule Network in the figure above consists of three parts: a convolutional
   * Three linear layers, sizes `(16*10, 512)`, `(512, 1024)` and `(1024, 28*28)`. The first two are followed with ReLU and the last layer is followed by a Sigmoid layer.
   * Outputs `(N, 28*28)`, i.e. the reconstruction.
   
-### Computation Graph for DigitCaps
+## Computation Graph for DigitCaps
 <div style="text-align:center"><img src='https://github.com/xanderchf/pyCapsNet/blob/master/compgraph_digitcaps.png' width=600></div>
-This computation graph was originally for a better understanding of the gradient flow. I redrew the graph for DigitCaps in SVG to provide a clear illustration for people interested in implementing this part. If you want to implement backpropagation of DigitCaps, mind the accumulated gradient from each routing iteration.
+This computation graph was originally used for a better understanding of the gradient flow. I redrew the graph for DigitCaps in SVG to provide a clear illustration for people interested in implementing this part. If you want to implement backpropagation of DigitCaps, mind the accumulated gradient from each routing iteration.
 
-### Results
+## Results
 I achieved 99.41% validation accuracy at epoch 22 with the PyTorch implementation, which is close to the number reported on the paper. The CuPy implementation can quickly converge to 90%+, but overall trains much slower than the PyTorch version (still training to get the performance). The NumPy implementation is trained purely on CPU; Though I used multiprocessing in the network, it much slower than the GPU implementations. The reconstructed images are given below.
 
 <div style="text-align:center"><img src=https://github.com/xanderchf/pyCapsNet/blob/master/reconst.jpeg width=800></div>
