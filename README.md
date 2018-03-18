@@ -17,8 +17,8 @@ CuPy Implementation:
 * CuPy 2.0.0
 * CUDA 8
 
-## Motivation: Why another CapsNet implementation?
-There are many great implementations of Capsule Networks [with PyTorch], [TensorFlow] and [Keras], so why do we need another one? This project actually provides three implementations of CapsNet: PyTorch, NumPy and CuPy. For the PyTorch version, I implemented CapsNet for performance check and visualizations; for the NumPy and CuPy ones, I aim to get a deeper understanding of the structure and the gradient flow of CapsNet. The computation graph that I used for this implementation is provided later in this document.
+## Motivation
+There are many great implementations of Capsule Networks [with PyTorch], [TensorFlow] and [Keras], so why do we need another one? This project actually provides three implementations of CapsNet: PyTorch, NumPy and CuPy. For the PyTorch version, I implemented CapsNet for performance check and visualizations; for the NumPy and CuPy ones, I implemented CapsNet purely from scratch, both forward and backpropagation, aiming to get a deeper understanding of the structure and the gradient flow of CapsNet. The computation graph that I used for this implementation is provided later in this document.
 
 The purpose of this project is not to shoot for better performance or optimizing the speed, but to offer a better understanding of CapsNet implementation-wise. Reading the paper thoroughly is a must, but it is easy to get confused when it comes to real implementation. I will provide my own understanding in CapsNet and implementation walkthrough in this document.
 
@@ -27,11 +27,11 @@ This [video] really helped a lot for me to understand CapsNet. Take a minute and
 ## To Run
 For NumPy and CuPy implementations, change into the corresponding directories, and run
 ```
-python3 main.py --bs=100, --lr=1e-2, --opt='adam', '--disp'=1, --num_epochs=100, --val_epoch=1
+python3 main.py --bs=100, --lr=1e-3, --opt='adam', '--disp'=1, --num_epochs=100, --val_epoch=1
 ```
 For the PyTorch implementation, run
 ```
-python3 main.py --bs=100, --lr=1e-2, --opt='adam', '--disp'=1, --num_epochs=100, --val_epoch=1, use_cuda=True
+python3 main.py --bs=100, --lr=1e-3, --opt='adam', '--disp'=1, --num_epochs=100, --val_epoch=1, use_cuda=True, save_dir='saved_models'
 ```
 To visualize the reconstructed data, run the jupyter notebook in PyTorch/Visualization.ipnb.
 
@@ -47,11 +47,11 @@ Unlike the neurons in most neural networks, the capsules in this architecture ou
 In this paper, the authors replaces the conventional max-pooling layer with dynamic routing, iteratively refining the coupling coefficient to route the prediction made by the last layer to the next one. Such routing is achieved by "routing-by-agreement", where a capsule prefers to route its outputs to the capsules in the next layer whose output has a greater dot product with its own output. A result can be, for example, that the "5" capsule would receive features that agrees with "5". In the paper, the authors investigated this iterative refinement of routing coefficients, and found out that the number of iterations for finding the coefficients can indeed help achieve a lower loss and better stability. However, this sequential and iterative structure can make CapsNet very slow. In this project, I followed the paper and set the number of routing iterations to 3.
 
 ### The Architecture
-<div style="text-align:center"><img src='https://github.com/xanderchf/pyCapsNet/blob/master/capsnet.png' width=700></div>
+<p align="center"><img src='https://github.com/xanderchf/pyCapsNet/blob/master/capsnet.png' width=700></dp>
 
 The Capsule Network in the figure above consists of three parts: a convolutional layer (Conv1) and two capsule layers (PrimaryCaps and DigitCaps, which I will explain later). The DigitCaps layer yields a 16-dimensional vector for each of the 10 classes, and the L2 norm of these vectors becomes the class score. The decoder in the figure below consumes these vectors and tries to reconstruct the image. The final loss is the combination of the score loss ("margin loss" in the paper) and the reconstruction loss.
 
-<div style="text-align:center"><img src="https://github.com/xanderchf/pyCapsNet/blob/master/decoder.png" width=500></div>
+<p align="center"><img src="https://github.com/xanderchf/pyCapsNet/blob/master/decoder.png" width=500></p>
 
 ### Detailed Walkthrough
 
@@ -77,13 +77,28 @@ The Capsule Network in the figure above consists of three parts: a convolutional
   * Outputs `(N, 28*28)`, i.e. the reconstruction.
   
 ## Computation Graph for DigitCaps
-<div style="text-align:center"><img src='https://github.com/xanderchf/pyCapsNet/blob/master/compgraph_digitcaps.png' width=600></div>
+
+<p align="center"><img src='https://github.com/xanderchf/pyCapsNet/blob/master/compgraph_digitcaps.png' width=600></p>
+
 This computation graph was originally used for a better understanding of the gradient flow. I redrew the graph for DigitCaps in SVG to provide a clear illustration for people interested in implementing this part. If you want to implement backpropagation of DigitCaps, mind the accumulated gradient from each routing iteration.
 
 ## Results
-I achieved 99.41% validation accuracy at epoch 22 with the PyTorch implementation, which is close to the number reported on the paper. The CuPy implementation can quickly converge to 90%+, but overall trains much slower than the PyTorch version (still training to get the performance). The NumPy implementation is trained purely on CPU; Though I used multiprocessing in the network, it much slower than the GPU implementations. The reconstructed images are given below.
+I achieved 99.41% validation accuracy at epoch 22 with the PyTorch implementation, which is close to the number reported on the paper. The CuPy implementation can quickly converge to 90%+, but overall trains slower than the PyTorch version (still training to get the performance). The NumPy implementation is trained purely on CPU; Though I used multiprocessing in the network, it much slower than the GPU implementations. The reconstructed images are given below.
 
-<div style="text-align:center"><img src=https://github.com/xanderchf/pyCapsNet/blob/master/reconst.jpeg width=800></div>
+<p align="center"><img src=https://github.com/xanderchf/pyCapsNet/blob/master/reconst.jpeg width=800></p>
+
+I also performed the experiment to perturb the 16-dimensional vectors of DigitCaps output, and feed in the pre-trained decoder and try to visualize the meaning of each dimension. The image given below shows that perturbing one dimension could change the orientation, width, stroke width and local features of the reconstructed image.
+
+<p align="center"><img src=https://github.com/xanderchf/pyCapsNet/blob/master/perturb.jpg width=800></p>
+
+
+## To-dos
+
+- [x] Add visualization ipynb for PyTorch implementation
+- [ ] Add visualization ipynb for CuPy and NumPy implementations
+- [ ] Report performance of CuPy implementation
+- [ ] Finish deformable convolution implementation in CuPy
+- [ ] Start a project on CuPy automatic differentiation, which could possibly benefit this project
 
 <!-- Markdown link & img dfn's -->
 [license]: https://img.shields.io/github/license/mashape/apistatus.svg
