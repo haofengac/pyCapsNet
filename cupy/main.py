@@ -24,8 +24,11 @@ def parse_args():
                       help='interval to display training loss',
                       default='10', type=int)
     parser.add_argument('--num_epochs', dest='num_epochs',
-                      help='interval to display training loss',
+                      help='num epochs to train',
                       default='100', type=int)
+    parser.add_argument('--val_epoch', dest='val_epoch',
+                      help='num epochs to run validation',
+                      default='1', type=int)
     
     args = parser.parse_args()
     
@@ -74,7 +77,7 @@ if __name__ == '__main__':
                                 % (epoch, batch_idx, loss, 100.*correct/args.bs, correct, args.bs))
 
         # val
-        if epoch % val_epoch == 0:
+        if epoch % args.val_epoch == 0:
             print('Validating...')
             correct = 0
             total = 0
