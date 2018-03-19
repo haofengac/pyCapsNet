@@ -31,7 +31,7 @@ python3 main.py --bs=100 --lr=1e-3 --opt='adam' '--disp'=10 --num_epochs=100 --v
 ```
 For the PyTorch implementation, run
 ```
-python3 main.py --bs=100 --lr=1e-3 --opt='adam' '--disp'=1 --num_epochs=100 --val_epoch=1 use_cuda=True save_dir='saved_models'
+python3 main.py --bs=100 --lr=1e-3 --opt='adam' '--disp'=1 --num_epochs=100 --val_epoch=1 --use_cuda=True --save_dir='saved_models'
 ```
 To visualize the reconstructed data, run the jupyter notebook in PyTorch/Visualization.ipnb.
 
