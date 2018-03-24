@@ -24,14 +24,18 @@ The purpose of this project is not to shoot for better performance or optimizing
 
 This [video] really helped a lot for me to understand CapsNet. Take a minute and check it out.
 
+## Challenges of Implementation
+* The 5-dimension tensor for CapsNet can be pretty confusing. Stick with one sequence of dimensions and mind the difference between element-wise and matrix multiplication.
+* CuPy and NumPy implementations are built from scratch. It is challenging to make sure gradient flows correctly; I drew computational graph and performed unit tests on each basic modules (e.g.: Squash, Conv2d, Linear, Sequence, losses) and composite ones (e.g.: PrimaryCaps, DigitCaps). Accumulating gradients for the iterative refinement especially requires a clear understanding on the computation flow of DigitCaps.
+
 ## To Run
 For NumPy and CuPy implementations, change into the corresponding directories, and run
 ```
-python3 main.py --bs=100 --lr=1e-3 --opt='adam' '--disp'=10 --num_epochs=100 --val_epoch=1
+python3 main.py --bs=100 --lr=1e-3 --opt='adam' --disp=10 --num_epochs=100 --val_epoch=1
 ```
 For the PyTorch implementation, run
 ```
-python3 main.py --bs=100 --lr=1e-3 --opt='adam' '--disp'=1 --num_epochs=100 --val_epoch=1 --use_cuda=True --save_dir='saved_models'
+python3 main.py --bs=100 --lr=1e-3 --opt='adam' --disp=1 --num_epochs=100 --val_epoch=1 --use_cuda=True --save_dir='saved_models'
 ```
 To visualize the reconstructed data, run the jupyter notebook in PyTorch/Visualization.ipnb.
 
@@ -85,7 +89,7 @@ Here I'll provide a brief cheat sheet, which I would find extremely helpful if I
 This computation graph was originally used for a better understanding of the gradient flow. I redrew the graph for DigitCaps in SVG to provide a clear illustration for people interested in implementing this part. If you want to implement backpropagation of DigitCaps, mind the accumulated gradient from each routing iteration.
 
 ## Results
-I achieved 99.41% validation accuracy at epoch 22 with the PyTorch implementation, which is close to the number reported on the paper. The CuPy implementation can quickly converge to 90%+, but overall trains slower than the PyTorch version (still training to get the performance). The NumPy implementation is trained purely on CPU; Though I used multiprocessing in the network, it much slower than the GPU implementations. The reconstructed images are given below.
+I achieved 99.41% validation accuracy at epoch 22 with the PyTorch implementation, which is close to the number reported on the paper. The CuPy implementation can quickly converge to 90%+, but overall trains slower than the PyTorch version. The NumPy implementation is trained purely on CPU; Though I used multiprocessing in the network, it much slower than the GPU implementations. The reconstructed images are given below.
 
 <p align="center"><img src=https://github.com/xanderchf/pyCapsNet/blob/master/reconst.jpeg width=800></p>
 
