@@ -390,6 +390,57 @@ class DigitCaps(Module):
         self.W = params
 
     def forward(self, x):
+        """
+        The forward pass of the network where the routing takes place
+
+
+        Algorithm
+        ----------
+        From: https://arxiv.org/pdf/1710.09829.pdf
+
+        Original version
+          1: procedure ROUTING(u_ji_hat, r, l ):
+          2:   for all capsule i in layer l and capsule j in layer(l+1): b_ij←0
+          3:     for r iterations do:
+          4:        for all capsule i in layer l: c_i←softmax(b_i)
+          5:        for all capsule j in layer(l+1): s_j←sum_i( c_ij * u_ji_hat)
+          6:        for all capsule j in layer(l+ 1): v_j←squash(sj)
+          7:        for all capsule i in layer l and capsule j in layer(l+1):
+          7:            b_ij←b_ij+ scalarProduct(u_ji_hat, v_j)
+                 return v_j
+
+
+        Readable version with indentations
+        procedure ROUTING(u_ji_hat, r, l ):
+            for all capsule i in layer l and capsule j in layer(l+1):
+                b_ij←0
+                for r iterations do:
+                    for all capsule i in layer l:
+                        c_i←softmax(b_i)
+                    for all capsule j in layer(l+1):
+                        s_j←sum_i( c_ij * u_ji_hat)
+                    for all capsule j in layer(l+ 1):
+                        v_j←squash(sj)
+                    for all capsule i in layer l and capsule j in layer(l+1):
+                        b_ij←b_ij+ scalarProduct(u_ji_hat, v_j)
+            return v_j
+
+        Parameters Explained
+        ---------------------
+
+        x: input vector representing the output of some lower level capsule
+        W: is the weight matrix.
+        u_hat: is the prediction vector
+        b: log prior probabilities that the capsule x should be coupled
+        to capsule j from the next layer
+        c: is all the routing weights for a lower capsule 
+        s: is the output vector resulting from the linear
+            combination/regression of c with prediction vector
+        v: is the resulting output vector after squash function
+           which maps the length the vector within the range of 0 - 1
+        p: represents the agreement between the resulting output vector and
+           the prediction vector
+        """
         t = time.time()
         self.bs = x.shape[0]
         self.x = x
@@ -397,23 +448,29 @@ class DigitCaps(Module):
         W = tile(self.W, self.bs, 0)
         u_hat = W @ x
         self.u_hat = u_hat
+        # line 2 of the algorithm
         b = np.zeros((1, self.ncaps_prev, self.ncaps, 1, 1))
 
+        # line 3
         for r in range(self.route_iter):
             self.b[r] = b
+            # line 4
             c = self.softmaxs[r](b, dim=1)
 
             c = tile(c, self.bs, 0)
+            # line 5
             s = np.sum(c * u_hat, axis=1, keepdims=True)
+            # line 6
             v = self.squashs[r](s)
             if r == self.route_iter - 1:
                 return np.squeeze(v, axis=1)
             
             self.v[r] = v
+            # line 7
             p = u_hat.swapaxes(-1, -2) @ tile(v, self.ncaps_prev, 1)
+            # line 7
             b = b + np.mean(p, axis=0, keepdims=True)
-                
-            
+
     def backward(self, grad, optimizer=None):
         t = time.time()
         grad_accum = np.zeros_like(self.u_hat)
