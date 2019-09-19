@@ -88,9 +88,6 @@ if __name__ == '__main__':
 
                 targets = eye[targets]
                 scores, reconst = model(imgs)
-                loss, grad = criterion(scores, targets, reconst, imgs)
-                model.backward(grad, optimizer)
-
                 classes = np.argmax(scores, axis=1)
                 predicted = eye[np.squeeze(classes, axis=1), :]
 
